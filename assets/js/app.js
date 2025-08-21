@@ -227,6 +227,45 @@ class JavaQuestApp {
         }
 
         this.updateLessonProgress();
+        
+        // Initialize code editors after content is rendered
+        this.initializeCodeEditors();
+    }
+
+    /**
+     * Initialize code editors for the current phase
+     */
+    initializeCodeEditors() {
+        if (!this.currentLesson || !this.currentLesson.phases) return;
+        
+        const currentPhase = this.currentLesson.phases[this.currentPhase];
+        if (!currentPhase) return;
+
+        // Wait for DOM to be ready, then initialize editors
+        setTimeout(() => {
+            if (typeof codeEditor !== 'undefined' && codeEditor) {
+                switch (currentPhase.type) {
+                    case 'learn':
+                        // Initialize example editor if present
+                        if (document.getElementById('example-editor')) {
+                            codeEditor.createEditor('example-editor', currentPhase.content.example || '', true);
+                        }
+                        break;
+                    case 'practice':
+                        // Initialize practice editor
+                        if (document.getElementById('practice-editor')) {
+                            codeEditor.createEditor('practice-editor', currentPhase.content.starterCode || '');
+                        }
+                        break;
+                    case 'challenge':
+                        // Initialize challenge editor
+                        if (document.getElementById('challenge-editor')) {
+                            codeEditor.createEditor('challenge-editor', '// اكتب الكود هنا...');
+                        }
+                        break;
+                }
+            }
+        }, 100);
     }
 
     generateLessonContent() {
@@ -677,6 +716,82 @@ class JavaQuestApp {
 
     resetCode() {
         console.log('Resetting code...');
+    }
+
+    /**
+     * Complete a challenge successfully
+     */
+    completeChallenge() {
+        if (!this.currentLesson || !this.currentLesson.phases[this.currentPhase]) {
+            console.error('No current challenge to complete');
+            return;
+        }
+
+        const lessonId = this.currentLesson.id;
+        const phaseIndex = this.currentPhase;
+
+        // Update progress
+        if (!this.userProgress.lessons[lessonId]) {
+            this.userProgress.lessons[lessonId] = {
+                completed: false,
+                completedPhases: [],
+                timeSpent: 0,
+                attempts: 0
+            };
+        }
+
+        const lessonProgress = this.userProgress.lessons[lessonId];
+        
+        // Mark phase as completed
+        if (!lessonProgress.completedPhases.includes(phaseIndex)) {
+            lessonProgress.completedPhases.push(phaseIndex);
+        }
+
+        // Award XP for challenge completion
+        const xpAward = 100; // More XP for challenges
+        this.userProgress.xp += xpAward;
+        this.updateLevel();
+
+        // Show success message
+        this.showSuccessMessage(`🎉 تم إكمال التحدي بنجاح! حصلت على ${xpAward} نقطة خبرة`);
+
+        // Save progress
+        this.saveProgress();
+
+        // Move to next phase or complete lesson
+        setTimeout(() => {
+            this.nextPhase();
+        }, 2000);
+    }
+
+    /**
+     * Show success message
+     */
+    showSuccessMessage(message) {
+        // Create success overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'success-overlay';
+        overlay.innerHTML = `
+            <div class="success-content">
+                <div class="success-icon">🏆</div>
+                <div class="success-message">${message}</div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // Animate in
+        setTimeout(() => {
+            overlay.classList.add('show');
+        }, 100);
+        
+        // Remove after delay
+        setTimeout(() => {
+            overlay.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+            }, 300);
+        }, 3000);
     }
 }
 

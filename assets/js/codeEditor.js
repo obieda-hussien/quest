@@ -17,37 +17,54 @@ class CodeEditor {
             return null;
         }
 
-        const editor = CodeMirror(container, {
-            value: code,
-            mode: 'text/x-java',
-            theme: 'monokai',
-            lineNumbers: true,
-            autoCloseBrackets: true,
-            matchBrackets: true,
-            indentUnit: 4,
-            indentWithTabs: false,
-            lineWrapping: true,
-            readOnly: readOnly,
-            extraKeys: {
-                'Ctrl-Space': 'autocomplete',
-                'F11': function(cm) {
-                    cm.setOption('fullScreen', !cm.getOption('fullScreen'));
-                },
-                'Esc': function(cm) {
-                    if (cm.getOption('fullScreen')) cm.setOption('fullScreen', false);
+        let editor;
+
+        // Try to use CodeMirror first, fallback to SimpleEditor
+        if (typeof CodeMirror !== 'undefined') {
+            editor = CodeMirror(container, {
+                value: code,
+                mode: 'text/x-java',
+                theme: 'monokai',
+                lineNumbers: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                indentWithTabs: false,
+                lineWrapping: true,
+                readOnly: readOnly,
+                extraKeys: {
+                    'Ctrl-Space': 'autocomplete',
+                    'F11': function(cm) {
+                        cm.setOption('fullScreen', !cm.getOption('fullScreen'));
+                    },
+                    'Esc': function(cm) {
+                        if (cm.getOption('fullScreen')) cm.setOption('fullScreen', false);
+                    }
                 }
-            }
-        });
+            });
+
+            // Add change listener for real-time feedback
+            editor.on('change', () => {
+                if (!readOnly) {
+                    this.onCodeChange(editor);
+                }
+            });
+        } else {
+            // Fallback to SimpleEditor
+            console.warn('CodeMirror not available, using fallback editor');
+            container.innerHTML = ''; // Clear existing content
+            editor = new SimpleEditor(container, code, readOnly);
+            
+            // Add change listener for fallback editor
+            editor.on('change', () => {
+                if (!readOnly) {
+                    this.onCodeChange(editor);
+                }
+            });
+        }
 
         this.editors[containerId] = editor;
         this.currentEditor = editor;
-
-        // Add change listener for real-time feedback
-        editor.on('change', () => {
-            if (!readOnly) {
-                this.onCodeChange(editor);
-            }
-        });
 
         return editor;
     }
@@ -175,9 +192,154 @@ class CodeEditor {
         }
 
         const code = this.currentEditor.getValue();
+        
+        // Check if we're in challenge mode
+        if (this.isInChallengeMode()) {
+            this.runChallengeValidation(code);
+        } else {
+            const output = this.javaSimulator.execute(code);
+            this.displayOutput(output);
+            this.updateFeedbackWithExecution(code, output);
+        }
+    }
+
+    /**
+     * Check if we're currently in challenge mode
+     */
+    isInChallengeMode() {
+        return document.getElementById('challenge-editor') && 
+               app.currentLesson && 
+               app.currentLesson.phases[app.currentPhase] && 
+               app.currentLesson.phases[app.currentPhase].type === 'challenge';
+    }
+
+    /**
+     * Run validation specifically for challenge mode
+     */
+    runChallengeValidation(code) {
+        const currentPhase = app.currentLesson.phases[app.currentPhase];
+        if (!currentPhase || !currentPhase.content.requirements) {
+            console.error('No requirements found for challenge validation');
+            return;
+        }
+
+        // Reset hints when running validation
+        this.javaSimulator.resetHints();
+
+        // Run advanced validation
+        const validationResults = this.javaSimulator.validateChallengeCode(
+            code, 
+            currentPhase.content.requirements
+        );
+
+        // Update UI with validation results
+        this.updateChallengeUI(validationResults, currentPhase.content.requirements);
+        
+        // Also run basic execution for console output
         const output = this.javaSimulator.execute(code);
         this.displayOutput(output);
-        this.updateFeedbackWithExecution(code, output);
+    }
+
+    /**
+     * Update challenge UI with validation results
+     */
+    updateChallengeUI(validationResults, requirements) {
+        // Update requirements list
+        const requirementsList = document.querySelector('.requirements-list');
+        if (requirementsList) {
+            requirementsList.innerHTML = '';
+            
+            requirements.forEach((requirement, index) => {
+                const validationDetail = validationResults.validationDetails[index];
+                const isPassed = validationDetail && validationDetail.passed;
+                
+                const requirementItem = document.createElement('div');
+                requirementItem.className = `requirement-item ${isPassed ? 'complete' : 'incomplete'}`;
+                requirementItem.innerHTML = `
+                    <span class="requirement-status">${isPassed ? '✅' : '❌'}</span>
+                    <span class="requirement-text">${requirement}</span>
+                    ${!isPassed ? `<button class="hint-btn" onclick="codeEditor.showHint('${requirement}', ${index})">💡 تلميح</button>` : ''}
+                `;
+                
+                requirementsList.appendChild(requirementItem);
+            });
+        }
+
+        // Show overall validation result
+        const feedbackContent = document.querySelector('.feedback-content');
+        if (feedbackContent) {
+            if (validationResults.passed) {
+                feedbackContent.innerHTML = `
+                    <div class="validation-success">
+                        <h3>🎉 ممتاز! لقد حققت جميع المتطلبات!</h3>
+                        <p>تم اجتياز ${validationResults.passedRequirements} من ${validationResults.totalRequirements} متطلبات</p>
+                        <button class="complete-challenge-btn" onclick="app.completeChallenge()">إكمال التحدي</button>
+                    </div>
+                `;
+            } else {
+                feedbackContent.innerHTML = `
+                    <div class="validation-partial">
+                        <h3>🔧 استمر في العمل!</h3>
+                        <p>تم اجتياز ${validationResults.passedRequirements} من ${validationResults.totalRequirements} متطلبات</p>
+                        <div class="failed-requirements">
+                            ${validationResults.failedRequirements.map(failed => `
+                                <div class="failed-requirement">
+                                    <span class="failed-text">${failed.requirement}</span>
+                                    <span class="failed-reason">${failed.reason}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    /**
+     * Show hint for a specific requirement
+     */
+    showHint(requirement, requirementIndex) {
+        const hint = this.javaSimulator.getNextHint(requirement);
+        
+        // Create or update hint display
+        let hintDisplay = document.querySelector('.hint-display');
+        if (!hintDisplay) {
+            hintDisplay = document.createElement('div');
+            hintDisplay.className = 'hint-display';
+            
+            // Insert after requirements list
+            const requirementsList = document.querySelector('.requirements-list');
+            if (requirementsList && requirementsList.parentNode) {
+                requirementsList.parentNode.insertBefore(hintDisplay, requirementsList.nextSibling);
+            }
+        }
+
+        const hintLevelNames = {
+            'conceptual': 'تلميح مفاهيمي',
+            'structural': 'تلميح هيكلي',
+            'partial': 'تلميح جزئي',
+            'solution': 'كشف الحل'
+        };
+
+        hintDisplay.innerHTML = `
+            <div class="hint-container">
+                <div class="hint-header">
+                    <span class="hint-level">${hintLevelNames[hint.level]}</span>
+                    <button class="close-hint" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+                <div class="hint-content ${hint.level}">
+                    ${hint.level === 'solution' ? `<pre><code>${hint.hint}</code></pre>` : hint.hint}
+                </div>
+                <div class="hint-actions">
+                    <button class="next-hint-btn" onclick="codeEditor.showHint('${requirement}', ${requirementIndex})">
+                        تلميح أكثر تفصيلاً
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Scroll to hint
+        hintDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     displayOutput(output) {
@@ -313,15 +475,21 @@ class CodeEditor {
 }
 
 /**
- * Simple Java Simulator for educational purposes
- * Simulates basic Java execution for learning
+ * Advanced Java Simulator for educational purposes
+ * Provides sophisticated validation and hint system
  */
 class JavaSimulator {
+    constructor() {
+        this.currentRequirements = null;
+        this.hintLevel = 0;
+        this.maxHintLevel = 4;
+    }
+
     execute(code) {
         const output = [];
         
         try {
-            // Very basic simulation - in reality you'd need a proper Java parser
+            // Parse code structure
             const lines = code.split('\n');
             const context = {
                 variables: {},
@@ -342,8 +510,10 @@ class JavaSimulator {
                 });
             }
 
-            // Validate code structure
-            this.validateCode(code, output);
+            // Basic validation for non-challenge mode
+            if (!this.currentRequirements) {
+                this.validateCode(code, output);
+            }
 
         } catch (error) {
             output.push({
@@ -353,6 +523,277 @@ class JavaSimulator {
         }
 
         return output;
+    }
+
+    /**
+     * Advanced validation for challenge mode
+     * @param {string} code - The code to validate
+     * @param {Array} requirements - Array of requirement objects
+     * @returns {Object} Validation results with detailed feedback
+     */
+    validateChallengeCode(code, requirements) {
+        this.currentRequirements = requirements;
+        const results = {
+            passed: true,
+            totalRequirements: requirements.length,
+            passedRequirements: 0,
+            failedRequirements: [],
+            validationDetails: []
+        };
+
+        try {
+            // Parse code for analysis
+            const context = {
+                variables: {},
+                objects: {},
+                classes: {}
+            };
+            this.parseClasses(code, context);
+
+            // Check each requirement
+            requirements.forEach((requirement, index) => {
+                const validationResult = this.validateRequirement(code, requirement, context);
+                results.validationDetails.push(validationResult);
+                
+                if (validationResult.passed) {
+                    results.passedRequirements++;
+                } else {
+                    results.passed = false;
+                    results.failedRequirements.push({
+                        index,
+                        requirement,
+                        reason: validationResult.message
+                    });
+                }
+            });
+
+        } catch (error) {
+            results.passed = false;
+            results.validationDetails.push({
+                passed: false,
+                message: 'خطأ في تحليل الكود: ' + error.message,
+                type: 'error'
+            });
+        }
+
+        return results;
+    }
+
+    /**
+     * Validate individual requirement
+     */
+    validateRequirement(code, requirement, context) {
+        const text = requirement.toLowerCase();
+        
+        // Class name validation
+        if (text.includes('إنشاء كلاس') || text.includes('كلاس باسم')) {
+            const classNameMatch = requirement.match(/كلاس باسم (\w+)/);
+            if (classNameMatch) {
+                const expectedClassName = classNameMatch[1];
+                const hasClass = new RegExp(`class\\s+${expectedClassName}`, 'i').test(code);
+                return {
+                    passed: hasClass,
+                    message: hasClass ? 
+                        `✅ تم إنشاء كلاس ${expectedClassName} بنجاح` : 
+                        `❌ لم يتم العثور على كلاس ${expectedClassName}`,
+                    type: hasClass ? 'success' : 'error'
+                };
+            }
+        }
+
+        // Variable validation
+        if (text.includes('خاصية') || text.includes('متغير')) {
+            const varMatch = requirement.match(/خاصية (\w+) من نوع (\w+)/);
+            if (varMatch) {
+                const varName = varMatch[1];
+                const varType = varMatch[2];
+                const hasVariable = new RegExp(`${varType}\\s+${varName}`, 'i').test(code);
+                return {
+                    passed: hasVariable,
+                    message: hasVariable ? 
+                        `✅ تم تعريف خاصية ${varName} من نوع ${varType}` : 
+                        `❌ لم يتم العثور على خاصية ${varName} من نوع ${varType}`,
+                    type: hasVariable ? 'success' : 'error'
+                };
+            }
+        }
+
+        // Method validation
+        if (text.includes('طريقة') || text.includes('دالة')) {
+            const methodMatch = requirement.match(/طريقة (\w+)\(\)/);
+            if (methodMatch) {
+                const methodName = methodMatch[1];
+                const hasMethod = new RegExp(`\\w+\\s+${methodName}\\s*\\(`, 'i').test(code);
+                return {
+                    passed: hasMethod,
+                    message: hasMethod ? 
+                        `✅ تم تعريف طريقة ${methodName}()` : 
+                        `❌ لم يتم العثور على طريقة ${methodName}()`,
+                    type: hasMethod ? 'success' : 'error'
+                };
+            }
+        }
+
+        // Inheritance validation
+        if (text.includes('يرث من') || text.includes('extends')) {
+            const extendsMatch = requirement.match(/يرث من كلاس (\w+)/);
+            if (extendsMatch) {
+                const parentClass = extendsMatch[1];
+                const hasInheritance = new RegExp(`extends\\s+${parentClass}`, 'i').test(code);
+                return {
+                    passed: hasInheritance,
+                    message: hasInheritance ? 
+                        `✅ تم الوراثة من كلاس ${parentClass}` : 
+                        `❌ لم يتم الوراثة من كلاس ${parentClass}`,
+                    type: hasInheritance ? 'success' : 'error'
+                };
+            }
+        }
+
+        // Generic validation for other requirements
+        return {
+            passed: true,
+            message: '⚠️ لم يتم فحص هذا المتطلب بعد',
+            type: 'warning'
+        };
+    }
+
+    /**
+     * Progressive hint system
+     */
+    getHint(requirement, hintLevel = 1) {
+        const text = requirement.toLowerCase();
+        
+        // Hints for class creation
+        if (text.includes('إنشاء كلاس') || text.includes('كلاس باسم')) {
+            const classNameMatch = requirement.match(/كلاس باسم (\w+)/);
+            const className = classNameMatch ? classNameMatch[1] : 'الكلاس';
+            
+            switch(hintLevel) {
+                case 1:
+                    return {
+                        level: 'conceptual',
+                        hint: `💡 تذكر أن الكلاس في Java يبدأ بكلمة "class" متبوعة بالاسم.`
+                    };
+                case 2:
+                    return {
+                        level: 'structural',
+                        hint: `🏗️ البنية الأساسية: class ${className} { }`
+                    };
+                case 3:
+                    return {
+                        level: 'partial',
+                        hint: `📝 جرب كتابة: public class ${className} {`
+                    };
+                case 4:
+                    return {
+                        level: 'solution',
+                        hint: `public class ${className} {\n    // أضف الخصائص والطرق هنا\n}`
+                    };
+            }
+        }
+
+        // Hints for variable declaration
+        if (text.includes('خاصية') || text.includes('متغير')) {
+            const varMatch = requirement.match(/خاصية (\w+) من نوع (\w+)/);
+            if (varMatch) {
+                const varName = varMatch[1];
+                const varType = varMatch[2];
+                
+                switch(hintLevel) {
+                    case 1:
+                        return {
+                            level: 'conceptual',
+                            hint: `💡 الخصائص تُعرَّف داخل الكلاس وتحدد نوع البيانات واسم المتغير.`
+                        };
+                    case 2:
+                        return {
+                            level: 'structural',
+                            hint: `🏗️ البنية: نوع_البيانات اسم_المتغير;`
+                        };
+                    case 3:
+                        return {
+                            level: 'partial',
+                            hint: `📝 جرب كتابة: ${varType} ${varName};`
+                        };
+                    case 4:
+                        return {
+                            level: 'solution',
+                            hint: `    ${varType} ${varName}; // خاصية من نوع ${varType}`
+                        };
+                }
+            }
+        }
+
+        // Hints for method creation
+        if (text.includes('طريقة') || text.includes('دالة')) {
+            const methodMatch = requirement.match(/طريقة (\w+)\(\)/);
+            if (methodMatch) {
+                const methodName = methodMatch[1];
+                
+                switch(hintLevel) {
+                    case 1:
+                        return {
+                            level: 'conceptual',
+                            hint: `💡 الطرق تحدد ما يمكن للكائن فعله. تبدأ بنوع الإرجاع ثم اسم الطريقة.`
+                        };
+                    case 2:
+                        return {
+                            level: 'structural',
+                            hint: `🏗️ البنية: public نوع_الإرجاع اسم_الطريقة() { }`
+                        };
+                    case 3:
+                        return {
+                            level: 'partial',
+                            hint: `📝 جرب كتابة: public void ${methodName}() {`
+                        };
+                    case 4:
+                        return {
+                            level: 'solution',
+                            hint: `    public void ${methodName}() {\n        // أضف الكود هنا\n    }`
+                        };
+                }
+            }
+        }
+
+        // Default hints
+        switch(hintLevel) {
+            case 1:
+                return {
+                    level: 'conceptual',
+                    hint: `💡 راجع المتطلب بعناية وفكر في البنية المطلوبة.`
+                };
+            case 2:
+                return {
+                    level: 'structural',
+                    hint: `🏗️ تأكد من استخدام الكلمات المفتاحية الصحيحة في Java.`
+                };
+            case 3:
+                return {
+                    level: 'partial',
+                    hint: `📝 ابدأ بكتابة الهيكل الأساسي ثم أضف التفاصيل.`
+                };
+            case 4:
+                return {
+                    level: 'solution',
+                    hint: `💭 راجع الأمثلة السابقة للحصول على إرشادات أكثر تفصيلاً.`
+                };
+        }
+    }
+
+    /**
+     * Reset hint level for new challenge
+     */
+    resetHints() {
+        this.hintLevel = 0;
+    }
+
+    /**
+     * Get next hint level
+     */
+    getNextHint(requirement) {
+        this.hintLevel = Math.min(this.hintLevel + 1, this.maxHintLevel);
+        return this.getHint(requirement, this.hintLevel);
     }
 
     parseClasses(code, context) {

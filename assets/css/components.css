@@ -365,3 +365,278 @@
         min-height: 150px;
     }
 }
+
+/* Advanced Validation Styles */
+.requirement-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+}
+
+.requirement-item.complete {
+    background: rgba(76, 175, 80, 0.1);
+    border-left: 4px solid #4CAF50;
+}
+
+.requirement-item.incomplete {
+    background: rgba(244, 67, 54, 0.1);
+    border-left: 4px solid #F44336;
+}
+
+.requirement-status {
+    font-size: 1.2em;
+    min-width: 24px;
+}
+
+.requirement-text {
+    flex: 1;
+    font-weight: 500;
+}
+
+.hint-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.hint-btn:hover {
+    background: var(--secondary-dark);
+    transform: translateY(-1px);
+}
+
+/* Hint Display */
+.hint-display {
+    margin: var(--spacing-lg) 0;
+    animation: slideIn 0.3s ease;
+}
+
+.hint-container {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.hint-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
+    color: white;
+}
+
+.hint-level {
+    font-weight: 600;
+    font-size: 1.1em;
+}
+
+.close-hint {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+}
+
+.close-hint:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.hint-content {
+    padding: var(--spacing-lg);
+    line-height: 1.6;
+}
+
+.hint-content.conceptual {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05));
+}
+
+.hint-content.structural {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 152, 0, 0.05));
+}
+
+.hint-content.partial {
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(156, 39, 176, 0.05));
+}
+
+.hint-content.solution {
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+}
+
+.hint-content pre {
+    background: rgba(0, 0, 0, 0.1);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    overflow-x: auto;
+    margin: var(--spacing-sm) 0;
+}
+
+.hint-actions {
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.next-hint-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.next-hint-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+/* Validation Results */
+.validation-success {
+    text-align: center;
+    padding: var(--spacing-xl);
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+    border: 2px solid #4CAF50;
+    border-radius: var(--border-radius-lg);
+    color: #2E7D32;
+}
+
+.validation-success h3 {
+    margin-bottom: var(--spacing-md);
+    color: #2E7D32;
+}
+
+.validation-partial {
+    padding: var(--spacing-lg);
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 152, 0, 0.05));
+    border: 2px solid #FF9800;
+    border-radius: var(--border-radius-lg);
+    color: #F57C00;
+}
+
+.validation-partial h3 {
+    margin-bottom: var(--spacing-md);
+    color: #F57C00;
+}
+
+.failed-requirements {
+    margin-top: var(--spacing-md);
+}
+
+.failed-requirement {
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    background: rgba(244, 67, 54, 0.1);
+    border-left: 4px solid #F44336;
+    border-radius: var(--border-radius);
+}
+
+.failed-text {
+    display: block;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.failed-reason {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+.complete-challenge-btn {
+    padding: var(--spacing-md) var(--spacing-xl);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-lg);
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-top: var(--spacing-lg);
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+}
+
+.complete-challenge-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Success Overlay */
+.success-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.success-overlay.show {
+    opacity: 1;
+}
+
+.success-content {
+    background: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-xl);
+    text-align: center;
+    max-width: 400px;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.success-overlay.show .success-content {
+    transform: scale(1);
+}
+
+.success-icon {
+    font-size: 4em;
+    margin-bottom: var(--spacing-md);
+}
+
+.success-message {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+}

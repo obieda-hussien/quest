@@ -634,7 +634,14 @@ class CodeEditor {
         const methodCalls = this.extractMethodCalls(code);
 
         if (objectCreations.length > 0 || methodCalls.length > 0) {
-            this.renderExecutionVisualization(objectCreations, methodCalls, output);
+            // Use enhanced visualization if available
+            if (window.visualFeedback) {
+                const analysis = this.analyzeCodeForVisualization(code);
+                const executionContext = this.createExecutionContext(code, output);
+                visualFeedback.createEnhancedVisualization(analysis, executionContext, 'practice-feedback');
+            } else {
+                this.renderExecutionVisualization(objectCreations, methodCalls, output);
+            }
         }
     }
 

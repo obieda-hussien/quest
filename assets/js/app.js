@@ -227,6 +227,47 @@ class JavaQuestApp {
         }
 
         this.updateLessonProgress();
+        
+        // Initialize code editors after content is rendered
+        this.initializeCodeEditors();
+    }
+
+    /**
+     * Initialize code editors for the current phase
+     */
+    initializeCodeEditors() {
+        if (!this.currentLesson || !this.currentLesson.phases) return;
+        
+        const currentPhase = this.currentLesson.phases[this.currentPhase];
+        if (!currentPhase) return;
+
+        // Wait for DOM to be ready, then initialize editors
+        setTimeout(() => {
+            if (typeof codeEditor !== 'undefined' && codeEditor) {
+                switch (currentPhase.type) {
+                    case 'learn':
+                        // Initialize example editor if present
+                        if (document.getElementById('example-editor')) {
+                            codeEditor.createEditor('example-editor', currentPhase.content.example || '', true);
+                        }
+                        break;
+                    case 'practice':
+                        // Initialize practice editor
+                        if (document.getElementById('practice-editor')) {
+                            codeEditor.createEditor('practice-editor', currentPhase.content.starterCode || '');
+                        }
+                        break;
+                    case 'challenge':
+                        // Initialize challenge editor
+                        if (document.getElementById('challenge-editor')) {
+                            // Reset challenge state for new challenge
+                            codeEditor.resetChallengeState();
+                            codeEditor.createEditor('challenge-editor', '// اكتب الكود هنا...');
+                        }
+                        break;
+                }
+            }
+        }, 100);
     }
 
     generateLessonContent() {
@@ -408,6 +449,15 @@ class JavaQuestApp {
 
     nextPhase() {
         if (this.currentLesson && this.currentPhase < this.currentLesson.phases.length - 1) {
+            // Check progress gate for challenge phases
+            const currentPhase = this.currentLesson.phases[this.currentPhase];
+            if (currentPhase && currentPhase.type === 'challenge') {
+                if (!codeEditor.challengeState.isValidated || codeEditor.challengeState.isCodeModified) {
+                    alert('⚠️ لا يمكن الانتقال للمرحلة التالية!\n\nيجب إكمال التحدي الحالي أولاً. اضغط على "تشغيل واختبار" وتأكد من اجتياز جميع المتطلبات.');
+                    return;
+                }
+            }
+            
             this.currentPhase++;
             this.renderLesson();
         }
@@ -422,6 +472,15 @@ class JavaQuestApp {
 
     completeLesson() {
         if (!this.currentLesson) return;
+
+        // Check progress gate for the current phase if it's a challenge
+        const currentPhase = this.currentLesson.phases[this.currentPhase];
+        if (currentPhase && currentPhase.type === 'challenge') {
+            if (!codeEditor.challengeState.isValidated || codeEditor.challengeState.isCodeModified) {
+                alert('⚠️ لا يمكن إنهاء الدرس!\n\nيجب إكمال التحدي الحالي أولاً. اضغط على "تشغيل واختبار" وتأكد من اجتياز جميع المتطلبات.');
+                return;
+            }
+        }
 
         // Mark lesson as completed
         if (!this.userProgress.lessons[this.currentLesson.id]) {
@@ -448,6 +507,21 @@ class JavaQuestApp {
             this.showView('skill-map-view');
             this.updateNavigation(document.querySelector('[data-view="map"]'));
         }, 2000);
+    }
+
+    /**
+     * Update user level based on current XP
+     */
+    updateLevel() {
+        const oldLevel = this.userProgress.level;
+        const newLevel = Math.floor(this.userProgress.xp / 100) + 1;
+        
+        if (newLevel > oldLevel) {
+            this.userProgress.level = newLevel;
+            this.showLevelUp(newLevel);
+        }
+        
+        this.updateUserStats();
     }
 
     awardXP(amount) {
@@ -677,6 +751,95 @@ class JavaQuestApp {
 
     resetCode() {
         console.log('Resetting code...');
+    }
+
+    /**
+     * Complete a challenge successfully
+     */
+    completeChallenge() {
+        if (!this.currentLesson || !this.currentLesson.phases[this.currentPhase]) {
+            console.error('No current challenge to complete');
+            return;
+        }
+
+        // Check progress gate - only allow completion if validation passed and code hasn't been modified
+        if (this.currentLesson.phases[this.currentPhase].type === 'challenge') {
+            if (!codeEditor.challengeState.isValidated || codeEditor.challengeState.isCodeModified) {
+                alert('⚠️ يجب التحقق من صحة الكود قبل إكمال التحدي!\n\nاضغط على "تشغيل واختبار" وتأكد من اجتياز جميع المتطلبات.');
+                return;
+            }
+        }
+
+        const lessonId = this.currentLesson.id;
+        const phaseIndex = this.currentPhase;
+
+        // Update progress
+        if (!this.userProgress.lessons[lessonId]) {
+            this.userProgress.lessons[lessonId] = {
+                completed: false,
+                completedPhases: [],
+                timeSpent: 0,
+                attempts: 0
+            };
+        }
+
+        const lessonProgress = this.userProgress.lessons[lessonId];
+        
+        // Ensure completedPhases is an array
+        if (!lessonProgress.completedPhases) {
+            lessonProgress.completedPhases = [];
+        }
+        
+        // Mark phase as completed
+        if (!lessonProgress.completedPhases.includes(phaseIndex)) {
+            lessonProgress.completedPhases.push(phaseIndex);
+        }
+
+        // Award XP for challenge completion
+        const xpAward = 100; // More XP for challenges
+        this.userProgress.xp += xpAward;
+        this.updateLevel();
+
+        // Show success message
+        this.showSuccessMessage(`🎉 تم إكمال التحدي بنجاح! حصلت على ${xpAward} نقطة خبرة`);
+
+        // Save progress
+        this.saveProgress();
+
+        // Move to next phase or complete lesson
+        setTimeout(() => {
+            this.nextPhase();
+        }, 2000);
+    }
+
+    /**
+     * Show success message
+     */
+    showSuccessMessage(message) {
+        // Create success overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'success-overlay';
+        overlay.innerHTML = `
+            <div class="success-content">
+                <div class="success-icon">🏆</div>
+                <div class="success-message">${message}</div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // Animate in
+        setTimeout(() => {
+            overlay.classList.add('show');
+        }, 100);
+        
+        // Remove after delay
+        setTimeout(() => {
+            overlay.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+            }, 300);
+        }, 3000);
     }
 }
 

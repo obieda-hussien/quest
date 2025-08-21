@@ -1,0 +1,425 @@
+/* Gamification styles for JavaQuest */
+
+/* Profile Stats */
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xxl);
+}
+
+.stat-card {
+    background: var(--surface-color);
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary-gradient);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-md);
+    display: block;
+}
+
+.stat-value {
+    font-size: var(--font-size-xxxl);
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-xs);
+}
+
+.stat-label {
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+/* Achievements Section */
+.achievements-section {
+    background: var(--surface-color);
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.achievements-section h3 {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-lg);
+    color: var(--primary-color);
+    text-align: center;
+}
+
+.badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+/* Badge Cards */
+.badge-card {
+    background: var(--background-color);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    text-align: center;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.badge-card:hover {
+    transform: translateY(-4px);
+}
+
+.badge-card.earned {
+    background: var(--surface-color);
+    box-shadow: var(--shadow-md);
+    border: 2px solid var(--success-color);
+}
+
+.badge-card.locked {
+    opacity: 0.6;
+    filter: grayscale(1);
+}
+
+.badge-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-sm);
+    display: block;
+}
+
+.badge-title {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-xs);
+}
+
+.badge-description {
+    font-size: var(--font-size-sm);
+    color: var(--text-light);
+}
+
+.badge-earned-date {
+    font-size: var(--font-size-sm);
+    color: var(--success-color);
+    font-weight: 500;
+    margin-top: var(--spacing-xs);
+}
+
+/* XP Animation */
+.xp-gain {
+    position: fixed;
+    top: 20%;
+    right: 20px;
+    background: var(--warning-gradient);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius);
+    font-weight: bold;
+    font-size: var(--font-size-lg);
+    box-shadow: var(--shadow-lg);
+    animation: xpGainAnimation 3s ease-out forwards;
+    z-index: 1000;
+}
+
+@keyframes xpGainAnimation {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.8);
+    }
+    20% {
+        opacity: 1;
+        transform: translateY(0) scale(1.1);
+    }
+    80% {
+        opacity: 1;
+        transform: translateY(-10px) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.9);
+    }
+}
+
+/* Level Up Animation */
+.level-up-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: modalFadeIn 0.5s ease-out;
+}
+
+.level-up-content {
+    background: var(--surface-color);
+    padding: var(--spacing-xxl);
+    border-radius: var(--border-radius-lg);
+    text-align: center;
+    max-width: 400px;
+    animation: levelUpPulse 0.8s ease-out;
+}
+
+.level-up-title {
+    font-size: var(--font-size-xxxl);
+    color: var(--success-color);
+    margin-bottom: var(--spacing-lg);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.level-up-message {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-xl);
+    color: var(--text-color);
+}
+
+.level-up-close {
+    padding: var(--spacing-md) var(--spacing-xl);
+    background: var(--success-gradient);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.level-up-close:hover {
+    transform: scale(1.05);
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes levelUpPulse {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Achievement Unlock Animation */
+.achievement-unlock {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--surface-color);
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-xl);
+    text-align: center;
+    z-index: 9999;
+    animation: achievementSlideIn 0.8s ease-out;
+    border: 3px solid var(--success-color);
+}
+
+.achievement-unlock-title {
+    color: var(--success-color);
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-md);
+    font-weight: bold;
+}
+
+.achievement-unlock-badge {
+    font-size: 4rem;
+    margin: var(--spacing-md) 0;
+    animation: badgeSpin 2s ease-out;
+}
+
+.achievement-unlock-name {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-sm);
+}
+
+.achievement-unlock-desc {
+    color: var(--text-light);
+    margin-bottom: var(--spacing-lg);
+}
+
+@keyframes achievementSlideIn {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3) rotate(-10deg);
+    }
+    60% {
+        transform: translate(-50%, -50%) scale(1.1) rotate(5deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    }
+}
+
+@keyframes badgeSpin {
+    0% { transform: rotateY(0deg); }
+    50% { transform: rotateY(180deg); }
+    100% { transform: rotateY(360deg); }
+}
+
+/* Progress Indicators */
+.skill-tree-progress {
+    position: relative;
+    margin: var(--spacing-lg) 0;
+}
+
+.progress-line {
+    position: absolute;
+    width: 2px;
+    background: var(--border-color);
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0;
+    bottom: 0;
+}
+
+.progress-line.completed {
+    background: var(--success-gradient);
+}
+
+.skill-node {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin: 0 auto var(--spacing-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.skill-node.locked {
+    background: var(--border-color);
+    color: var(--text-light);
+}
+
+.skill-node.available {
+    background: var(--secondary-color);
+    color: white;
+    box-shadow: 0 0 20px rgba(52, 152, 219, 0.3);
+}
+
+.skill-node.completed {
+    background: var(--success-gradient);
+    color: white;
+    box-shadow: 0 0 20px rgba(39, 174, 96, 0.3);
+}
+
+.skill-node:hover {
+    transform: scale(1.1);
+}
+
+/* Lesson Completion Effects */
+.lesson-complete-effect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--success-gradient);
+    opacity: 0;
+    border-radius: inherit;
+    animation: completionPulse 1s ease-out;
+}
+
+@keyframes completionPulse {
+    0% {
+        opacity: 0;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.3;
+        transform: scale(1.05);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+}
+
+/* Streaks and Combos */
+.streak-indicator {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    background: var(--warning-gradient);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius);
+    font-weight: bold;
+    box-shadow: var(--shadow-lg);
+    animation: streakBounce 0.5s ease-out;
+}
+
+@keyframes streakBounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Mobile Responsive Gamification */
+@media (max-width: 768px) {
+    .profile-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .badges-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .xp-gain, .streak-indicator {
+        right: 10px;
+        font-size: var(--font-size-base);
+    }
+    
+    .level-up-content {
+        margin: var(--spacing-lg);
+        padding: var(--spacing-lg);
+    }
+    
+    .achievement-unlock {
+        margin: var(--spacing-lg);
+        padding: var(--spacing-lg);
+    }
+}

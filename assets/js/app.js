@@ -489,6 +489,21 @@ class JavaQuestApp {
         }, 2000);
     }
 
+    /**
+     * Update user level based on current XP
+     */
+    updateLevel() {
+        const oldLevel = this.userProgress.level;
+        const newLevel = Math.floor(this.userProgress.xp / 100) + 1;
+        
+        if (newLevel > oldLevel) {
+            this.userProgress.level = newLevel;
+            this.showLevelUp(newLevel);
+        }
+        
+        this.updateUserStats();
+    }
+
     awardXP(amount) {
         const oldLevel = this.userProgress.level;
         this.userProgress.xp += amount;
@@ -741,6 +756,11 @@ class JavaQuestApp {
         }
 
         const lessonProgress = this.userProgress.lessons[lessonId];
+        
+        // Ensure completedPhases is an array
+        if (!lessonProgress.completedPhases) {
+            lessonProgress.completedPhases = [];
+        }
         
         // Mark phase as completed
         if (!lessonProgress.completedPhases.includes(phaseIndex)) {

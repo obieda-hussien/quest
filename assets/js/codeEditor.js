@@ -911,22 +911,27 @@ let codeEditor;
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     codeEditor = new CodeEditor();
-});
+    
+    // Enhance the app with code editor methods after a short delay to ensure app is ready
+    setTimeout(() => {
+        if (typeof app !== 'undefined' && app) {
+            // Add code editor methods to main app
+            Object.assign(app, {
+                runCode() {
+                    if (codeEditor) {
+                        codeEditor.runCode();
+                    }
+                },
 
-// Enhance the app with code editor methods
-if (typeof app !== 'undefined') {
-    // Add code editor methods to main app
-    Object.assign(app, {
-        runCode() {
-            if (codeEditor) {
-                codeEditor.runCode();
-            }
-        },
-
-        resetCode() {
-            if (codeEditor) {
-                codeEditor.resetCode();
-            }
+                resetCode() {
+                    if (codeEditor) {
+                        codeEditor.resetCode();
+                    }
+                }
+            });
+            console.log('Enhanced app with code editor methods');
+        } else {
+            console.error('App not available for enhancement');
         }
-    });
-}
+    }, 500);
+});

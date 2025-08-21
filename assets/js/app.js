@@ -260,6 +260,8 @@ class JavaQuestApp {
                     case 'challenge':
                         // Initialize challenge editor
                         if (document.getElementById('challenge-editor')) {
+                            // Reset challenge state for new challenge
+                            codeEditor.resetChallengeState();
                             codeEditor.createEditor('challenge-editor', '// اكتب الكود هنا...');
                         }
                         break;
@@ -447,6 +449,15 @@ class JavaQuestApp {
 
     nextPhase() {
         if (this.currentLesson && this.currentPhase < this.currentLesson.phases.length - 1) {
+            // Check progress gate for challenge phases
+            const currentPhase = this.currentLesson.phases[this.currentPhase];
+            if (currentPhase && currentPhase.type === 'challenge') {
+                if (!codeEditor.challengeState.isValidated || codeEditor.challengeState.isCodeModified) {
+                    alert('⚠️ لا يمكن الانتقال للمرحلة التالية!\n\nيجب إكمال التحدي الحالي أولاً. اضغط على "تشغيل واختبار" وتأكد من اجتياز جميع المتطلبات.');
+                    return;
+                }
+            }
+            
             this.currentPhase++;
             this.renderLesson();
         }
@@ -461,6 +472,15 @@ class JavaQuestApp {
 
     completeLesson() {
         if (!this.currentLesson) return;
+
+        // Check progress gate for the current phase if it's a challenge
+        const currentPhase = this.currentLesson.phases[this.currentPhase];
+        if (currentPhase && currentPhase.type === 'challenge') {
+            if (!codeEditor.challengeState.isValidated || codeEditor.challengeState.isCodeModified) {
+                alert('⚠️ لا يمكن إنهاء الدرس!\n\nيجب إكمال التحدي الحالي أولاً. اضغط على "تشغيل واختبار" وتأكد من اجتياز جميع المتطلبات.');
+                return;
+            }
+        }
 
         // Mark lesson as completed
         if (!this.userProgress.lessons[this.currentLesson.id]) {
@@ -740,6 +760,14 @@ class JavaQuestApp {
         if (!this.currentLesson || !this.currentLesson.phases[this.currentPhase]) {
             console.error('No current challenge to complete');
             return;
+        }
+
+        // Check progress gate - only allow completion if validation passed and code hasn't been modified
+        if (this.currentLesson.phases[this.currentPhase].type === 'challenge') {
+            if (!codeEditor.challengeState.isValidated || codeEditor.challengeState.isCodeModified) {
+                alert('⚠️ يجب التحقق من صحة الكود قبل إكمال التحدي!\n\nاضغط على "تشغيل واختبار" وتأكد من اجتياز جميع المتطلبات.');
+                return;
+            }
         }
 
         const lessonId = this.currentLesson.id;

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaQuest - رحلة تعلم البرمجة كائنية التوجه</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/gamification.css">
+    <!-- CodeMirror for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/theme/monokai.min.css">
+    <!-- Fallback styles for code editor -->
+    <link rel="stylesheet" href="assets/css/code-editor-fallback.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="logo">JavaQuest</div>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <p>جارِ تحضير رحلتك التعليمية...</p>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" class="app hidden">
+        <!-- Header with Navigation -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <h1 class="logo">JavaQuest</h1>
+                    <span class="tagline">رحلة البرمجة التفاعلية</span>
+                </div>
+                
+                <nav class="main-nav">
+                    <button class="nav-btn active" data-view="map">خريطة المهارات</button>
+                    <button class="nav-btn" data-view="lesson">الدرس الحالي</button>
+                    <button class="nav-btn" data-view="profile">ملفي الشخصي</button>
+                </nav>
+
+                <div class="user-stats">
+                    <div class="xp-display">
+                        <span class="xp-icon">⭐</span>
+                        <span id="user-xp">0</span> XP
+                    </div>
+                    <div class="level-display">
+                        <span class="level-icon">🏆</span>
+                        المستوى <span id="user-level">1</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Skill Tree Map View -->
+            <section id="skill-map-view" class="view active">
+                <div class="skill-tree-container">
+                    <h2 class="section-title">خريطة رحلة التعلم</h2>
+                    <div class="learning-stages">
+                        <!-- The Maker Stage -->
+                        <div class="stage-section maker-stage">
+                            <h3 class="stage-title">مرحلة الصانع</h3>
+                            <p class="stage-description">تعلم أساسيات الكلاسات والكائنات</p>
+                            <div class="lessons-grid" id="maker-lessons">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- The Builder Stage -->
+                        <div class="stage-section builder-stage">
+                            <h3 class="stage-title">مرحلة البنّاء</h3>
+                            <p class="stage-description">إتقان أركان البرمجة كائنية التوجه الأربعة</p>
+                            <div class="lessons-grid" id="builder-lessons">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- The Architect Stage -->
+                        <div class="stage-section architect-stage">
+                            <h3 class="stage-title">مرحلة المعماري</h3>
+                            <p class="stage-description">بناء أنظمة متكاملة ومشاريع حقيقية</p>
+                            <div class="lessons-grid" id="architect-lessons">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Lesson View -->
+            <section id="lesson-view" class="view">
+                <div class="lesson-container">
+                    <!-- Lesson Header -->
+                    <div class="lesson-header">
+                        <button class="back-btn" onclick="showView('skill-map-view')">← العودة للخريطة</button>
+                        <div class="lesson-info">
+                            <h2 id="lesson-title">عنوان الدرس</h2>
+                            <div class="lesson-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="lesson-progress-fill"></div>
+                                </div>
+                                <span class="progress-text" id="lesson-progress-text">0 / 3</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lesson Content -->
+                    <div class="lesson-content" id="lesson-content">
+                        <!-- Content will be dynamically loaded -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile View -->
+            <section id="profile-view" class="view">
+                <div class="profile-container">
+                    <h2 class="section-title">ملفي الشخصي</h2>
+                    
+                    <div class="profile-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">🏆</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="profile-level">1</div>
+                                <div class="stat-label">المستوى الحالي</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">⭐</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="profile-xp">0</div>
+                                <div class="stat-label">نقاط الخبرة</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">📚</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="profile-completed">0</div>
+                                <div class="stat-label">الدروس المكتملة</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">🎯</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="profile-badges">0</div>
+                                <div class="stat-label">الأوسمة المحققة</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="achievements-section">
+                        <h3>الأوسمة والإنجازات</h3>
+                        <div class="badges-grid" id="badges-grid">
+                            <!-- Badges will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/mode/clike/clike.min.js"></script>
+    <!-- Fallback for when CDN is blocked -->
+    <script src="assets/js/simple-editor.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/lessons.js"></script>
+    <script src="assets/js/gamification.js"></script>
+    <script src="assets/js/codeEditor.js"></script>
+    <script src="assets/js/visualFeedback.js"></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+/* Fallback styles for code editor when CodeMirror CDN is blocked */
+
+.code-editor {
+    background: #2b2b2b;
+    color: #f8f8f2;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 16px;
+    border: none;
+    border-radius: 0 0 8px 8px;
+    resize: vertical;
+    width: 100%;
+    min-height: 200px;
+    white-space: pre;
+    overflow: auto;
+    direction: ltr;
+    text-align: left;
+}
+
+.code-editor:focus {
+    outline: 2px solid var(--secondary-color);
+    outline-offset: 2px;
+}
+
+/* Simple syntax highlighting simulation */
+.code-editor.java-highlighted {
+    background: #282828;
+}
+
+/* Fallback editor container */
+.simple-editor {
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.simple-editor-header {
+    background: var(--primary-color);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.simple-editor-content {
+    position: relative;
+}
+
+.simple-editor textarea {
+    background: #2b2b2b;
+    color: #f8f8f2;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 16px;
+    border: none;
+    resize: vertical;
+    width: 100%;
+    min-height: 200px;
+    direction: ltr;
+    text-align: left;
+}
+
+.simple-editor textarea:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--secondary-color);
+}
+
+/* Java syntax highlighting classes for fallback */
+.java-keyword {
+    color: #66d9ef;
+    font-weight: bold;
+}
+
+.java-string {
+    color: #e6db74;
+}
+
+.java-comment {
+    color: #75715e;
+    font-style: italic;
+}
+
+.java-number {
+    color: #ae81ff;
+}
+
+.java-class {
+    color: #a6e22e;
+    font-weight: bold;
+}
+
+.java-method {
+    color: #fd971f;
+}
